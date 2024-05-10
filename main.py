@@ -9,6 +9,11 @@ bot = Bot(token = "vk1.a.hHMpk86LD-qDpLrscN9vz-NV5gYnf5QIU3Cz5-tJAdZdqKP92B2c_Xf
 
 ctx = CtxStorage()
 
+conn = psycopg2.connect(user="postgres", password="mvzXJObZmoogeViIsPWNvEHIaVSVLrZs", host="monorail.proxy.rlwy.net",
+                        port="10139", database="railway")
+cursor = conn.cursor()
+
+
 hello = ["Привет","привет", 'start', 'Хай','хай', 'Ку-ку', 'здарова','Здарова',
          'Здраствуйте','здраствуйте', 'Здраствуй','здраствуй']
 
