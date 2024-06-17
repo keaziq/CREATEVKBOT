@@ -1,5 +1,4 @@
-from vkbottle import Keyboard, Text, BaseStateGroup, CtxStorage, VKPay, KeyboardButtonColor
-from vkbottle.tools import PhotoMessageUploader
+from vkbottle import Keyboard, Text, BaseStateGroup, CtxStorage, KeyboardButtonColor
 from vkbottle.bot import Bot, Message
 import psycopg2
 import json
@@ -43,12 +42,13 @@ async def greetings(message: Message):
         keyboard.add(Text("Удалить товар", {"option": "delete"}))
     await message.answer("Выберите что-то из списка", keyboard=keyboard)
 
+# Удаление товаров в базе данных по id
 @bot.on.private_message(payload={"option": "delete"})
 async def delete_goods(message: Message):
     await bot.state_dispenser.set(message.peer_id, Delete.goods_id)
     return "Введите id товара"
 
-
+# Вывод результата после удаления товаров в базе данных по id
 @bot.on.private_message(state=Delete.goods_id)
 async def add_name(message: Message):
     ctx.set("goods_id", message.text)
@@ -64,6 +64,7 @@ async def add_name(message: Message):
         await message.answer("Товар удален")
         await bot.state_dispenser.delete(message.peer_id)
 
+# Добавление товаров в корзину
 @bot.on.private_message(payload={"option": "add"})
 async def add_goods(message: Message):
     await bot.state_dispenser.set(message.peer_id, Add.name)
@@ -132,9 +133,11 @@ async def add_photo_id(message: Message):
 
         await bot.state_dispenser.delete(message.peer_id)
 
+# Корзина
 @bot.on.private_message(payload={"option": "cart"})
 async def cart_options(message: Message):
-    cursor.execute(f"SELECT * from cart inner join goods on cart.goods_id = goods.id and cart.user_id = {message.from_id}")
+    cursor.execute(f"SELECT * from cart inner join goods "
+                   f"on cart.goods_id = goods.id and cart.user_id = {message.from_id}")
     carts = cursor.fetchall()
     if cursor.rowcount > 0:
         for i in carts:
@@ -167,7 +170,7 @@ async def cart_options(message: Message):
     else:
         await message.answer("Корзина пуста")
 
-
+# Удаление из корзины
 @bot.on.private_message(text="Удалить из корзины")
 async def delete_from_cart(message: Message):
     payload = message.payload
@@ -189,9 +192,9 @@ async def buy_options(message: Message):
     keyboard.add(Text("Одежда", {"type": "clothing"}))
     await message.answer("Выберите что-то из списка", keyboard=keyboard)
 
-
+# Просмотр компании
 @bot.on.private_message(text=["Обувь", "Одежда"])
-async def name_function(message: Message):
+async def сompany_function(message: Message):
     payload = message.payload
     payload = json.loads(payload)
     buy_type = payload["type"]
@@ -213,7 +216,7 @@ async def name_function(message: Message):
         a += 1
     await message.answer("Компании", keyboard=keyboard)
 
-
+# Переход в выбору товара
 @bot.on.private_message(text=f"Посмотреть <company>")
 async def shoes(message: Message, company: str):
     payload = message.payload
@@ -249,12 +252,12 @@ async def shoes(message: Message, company: str):
 
     await message.answer(f"Вы можете ознакомиться с брендом одежды {company}.", template=answer)
 
-
+# Добавление в корзину
 @bot.on.private_message(text="Добавить в корзину")
 async def cart_add(message: Message):
     payload = message.payload
     payload = json.loads(payload)
-    g_id = payload["cart"][0]
+    g_id = payload["cart"]
     ctx.set("good", g_id)
     await bot.state_dispenser.set(message.peer_id, Goods.size)
     return "Введите размер"
